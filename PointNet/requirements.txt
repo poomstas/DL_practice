@@ -9,4 +9,5 @@ conda install pandas==2.0.1 -y
 conda install pytorch-cluster -c pyg -y
 conda install seaborn==0.12.2 -y
 
-pip install --upgrade nbformat==5.8.0 -y
+pip install --upgrade nbformat==5.8.0
+pip install torchsummary==1.5.1

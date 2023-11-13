@@ -41,7 +41,7 @@ class PointNet2(torch.nn.Module):
     def __init__(
         self,
         set_abstraction_ratio_1, set_abstraction_ratio_2,
-        set_abstraction_radius_1, set_abstraction_radius_2, dropout
+        set_abstraction_radius_1, set_abstraction_radius_2, dropout, n_classes=10
     ):
         super().__init__()
 
@@ -58,7 +58,7 @@ class PointNet2(torch.nn.Module):
         )
         self.sa3_module = GlobalSetAbstraction(MLP([256 + 3, 256, 512, 1024]))
 
-        self.mlp = MLP([1024, 512, 256, 10], dropout=dropout, norm=None)
+        self.mlp = MLP([1024, 512, 256, n_classes], dropout=dropout, norm=None)
 
     def forward(self, data):
         sa0_out = (data.x, data.pos, data.batch)

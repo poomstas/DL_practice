@@ -15,6 +15,7 @@ class DCGNN(nn.Module):
         
     def forward(self, data):                                # data: [x, pos, batch]
         x, pos, batch = data.x, data.pos, data.batch        # x: [N, C], pos: [N, 3], batch: [N]
+        import pdb; pdb.set_trace()
 
         x0 = torch.cat([x, pos], dim=-1)
         x1 = self.conv1(x0, batch)
@@ -24,12 +25,28 @@ class DCGNN(nn.Module):
 
         return F.log_softmax(out, dim=1)
         
-# %%
+        
+# %% Test out the model using ShapeNet dataset and DataLoader
 if __name__=='__main__':
-    from torch_geometric.datasets import ShapeNet
     from paths import DATA
+    from torch_geometric.datasets import ShapeNet
+    from torch_geometric.data import DataLoader
 
-    model = DCGNN(out_channels=4)
-    dataset = ShapeNet(root=DATA, categories=['Table', 'Lamp', 'Guitar', 'Motorbike']).shuffle()[:5000]
+    categories = ['Table', 'Lamp', 'Guitar', 'Motorbike']
 
-    out = model.forward(dataset[0])
+    model       = DCGNN(out_channels=len(categories))
+    dataset     = ShapeNet(root=DATA, categories=categories).shuffle()[:5000]
+    dataloader  = DataLoader(dataset        = dataset,
+                             batch_size     = 32,
+                             shuffle        = True,
+                             num_workers    = 12,
+                             pin_memory     = True) # pin_memory=True to keep the data in GPU
+
+    for batch in dataloader:
+        out = model.forward(batch)
+        break
+
+    print(batch)
+    print(batch.x.shape)
+    print(batch.pos.shape)
+    print(batch.batch.shape)

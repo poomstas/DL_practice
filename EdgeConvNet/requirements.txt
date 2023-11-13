@@ -1,0 +1,25 @@
+conda create --name EdgeConvNet python=3.10
+conda activate EdgeConvNet
+
+# https://stackoverflow.com/questions/69952475/how-to-solve-the-pytorch-geometric-install-error-undefined-symbol-zn5torch3ji
+pip install torch -f https://data.pyg.org/whl/torch-1.12.1+gpu.html
+pip install torch-geometric -f https://data.pyg.org/whl/torch-1.12.1+gpu.html
+
+# https://github.com/rusty1s/pytorch_cluster
+pip install torch-cluster -f https://data.pyg.org/whl/torch-2.1.0+cu121.html
+pip install pytorch-lightning==0.9.0
+
+conda install plotly==5.14.1 -y
+conda install pandas==2.0.1 -y
+conda install seaborn==0.12.2 -y
+
+pip install --upgrade nbformat==5.8.0
+pip install torchsummary==1.5.1
+
+
+
+
+
+
+# For removing the environment altogether:
+conda uninstall -n EdgeConvNet --all

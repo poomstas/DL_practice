@@ -15,7 +15,6 @@ class DCGNN(nn.Module):
         
     def forward(self, data):                                # data: [x, pos, batch]
         x, pos, batch = data.x, data.pos, data.batch        # x: [N, C], pos: [N, 3], batch: [N]
-        import pdb; pdb.set_trace()
 
         x0 = torch.cat([x, pos], dim=-1)
         x1 = self.conv1(x0, batch)

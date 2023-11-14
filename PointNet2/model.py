@@ -61,7 +61,7 @@ class PointNet2(torch.nn.Module):
         self.mlp = MLP([1024, 512, 256, n_classes], dropout=dropout, norm=None)
 
     def forward(self, data):
-        sa0_out = (data.x, data.pos, data.batch)
+        sa0_out = (data.x, data.pos, data.batch) # Note how the batch is handled
         sa1_out = self.sa1_module(*sa0_out)
         sa2_out = self.sa2_module(*sa1_out)
         sa3_out = self.sa3_module(*sa2_out)
@@ -90,7 +90,7 @@ if __name__=='__main__':
         print('batch info  : ', batch)
         break
 
-    model = PointNet2(0.748, 0.4817, 0.3316, 0.2447, 0.1) # Retrieved after parameter sweep
+    model = PointNet2(0.748, 0.4817, 0.3316, 0.2447, 0.1, n_classes=10) # Retrieved after parameter sweep
 
     out = model(batch)
 

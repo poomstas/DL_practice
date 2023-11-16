@@ -175,8 +175,8 @@ if __name__=='__main__':
     trainer = Trainer(
         accelerator                     = 'gpu',  # set to cpu to address CUDA errors.
         strategy                        = 'auto', # Currently only the pytorch_lightning.strategies.SingleDeviceStrategy and pytorch_lightning.strategies.DDPStrategy training strategies of  PyTorch Lightning are supported in order to correctly share data across all devices/processes
-        devices                         = 'auto',    # [0, 1] or use 'auto'
-        # devices                         = [1],    # [0, 1] or use 'auto'
+        # devices                         = 'auto',    # [0, 1] or use 'auto'
+        devices                         = [1],    # [0, 1] or use 'auto'
         log_every_n_steps               = 1,
         fast_dev_run                    = False,     # Run a single-batch through train & val and see if the code works
         logger                          = [],

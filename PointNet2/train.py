@@ -167,8 +167,8 @@ if __name__=='__main__':
     run_ID = '_'.join([hostname, datetime.now().strftime('%Y%m%d_%H%M%S')])
     print('Hostname: {}'.format(hostname))
 
-    cb_checkpoint = ModelCheckpoint(dirpath     = './model_checkpoint/{}/'.format(run_ID), 
-                                    monitor     = 'loss', 
+    cb_checkpoint = ModelCheckpoint(dirpath     = './model_checkpoint/{}/'.format(run_ID),
+                                    monitor     = 'val_loss',
                                     filename    = '{epoch:02d}-{loss:.5f}',
                                     save_top_k  = 10)
 

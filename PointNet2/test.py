@@ -16,12 +16,14 @@ from util import plot_3d_shape
 # %%
 CKPT_PATH = '/home/brian/github/DL_practice/PointNet2/model_checkpoint/aorus_20231116_114443/'
 CKPT_FILENAME = 'epoch=14-loss=0.03583.ckpt' 
+MODELNET_DATASET_ALIAS = '10'
 
+# %%
 trainer = TrainPointNet2.load_from_checkpoint(os.path.join(CKPT_PATH, CKPT_FILENAME), map_location=torch.device('cpu'))
 
 dataset_val   = ModelNet(root             = DATA,
                          train            = False,
-                         name             = '10',
+                         name             = MODELNET_DATASET_ALIAS,
                          pre_transform    = T.NormalizeScale(),
                          transform        = T.SamplePoints(1024))
 
@@ -33,7 +35,7 @@ val_dataloader = DataLoader(dataset        = dataset_val,
                             pin_memory     = False)
 
 
-# %% Plot 3D point cloud and print pred & actual
+# %% Plot a random 3D point cloud and print pred & actual
 random_index = random.choice(range(len(dataset_val)))
 print('='*90)
 plot_3d_shape(dataset_val[random_index])

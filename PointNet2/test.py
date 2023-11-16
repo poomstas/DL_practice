@@ -12,6 +12,10 @@ from torch_geometric.datasets import ModelNet
 from torch_geometric.data import Data, Batch
 
 from util import plot_3d_shape
+from tqdm import tqdm
+
+import matplotlib.pyplot as plt
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
 
 # %%
 CKPT_PATH = '/home/brian/github/DL_practice/PointNet2/model_checkpoint/aorus_20231116_114443/'
@@ -29,7 +33,7 @@ dataset_val   = ModelNet(root             = DATA,
 
 
 val_dataloader = DataLoader(dataset        = dataset_val,
-                            batch_size     = 16,
+                            batch_size     = 128,
                             shuffle        = True,
                             num_workers    = 8,
                             pin_memory     = False)
@@ -49,4 +53,32 @@ print('Predicted:\t', pred)
 print('Actual:\t\t', actual)
 
 
-# %% Calculate accuracy
+# %% Calculate classification metrics
+targets, preds = [], []
+for batch in tqdm(val_dataloader):
+    actual = batch.y
+    pred = torch.argmax(trainer(batch), dim=1)
+    targets.append(actual)
+    preds.append(pred)
+
+targets = torch.cat(targets)
+preds = torch.cat(preds)
+
+# %%
+y_true = targets.numpy()
+y_pred = preds.numpy()
+
+# Metrics
+accuracy = accuracy_score(y_true, y_pred)
+precision = precision_score(y_true, y_pred, average='macro')  
+recall = recall_score(y_true, y_pred, average='macro')
+f1 = f1_score(y_true, y_pred, average='macro')
+
+conf_matrix = confusion_matrix(y_true, y_pred)
+
+print("Accuracy:", accuracy)
+print("Precision:", precision)
+print("Recall:", recall)
+print("F1-score:", f1)
+
+print("Confusion Matrix:\n", conf_matrix)

@@ -18,8 +18,8 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
 
 # %%
-CKPT_PATH = '/home/brian/github/DL_practice/PointNet2/model_checkpoint/aorus_20231117_091709'
-CKPT_FILENAME = 'val_loss=0.38753-loss=0.14389-epoch=23.ckpt' 
+CKPT_PATH = '/home/brian/github/DL_practice/PointNet2/model_checkpoint/aorus_20231117_173355'
+CKPT_FILENAME = 'val_loss=0.20248-loss=0.04923-epoch=19.ckpt'
 MODELNET_DATASET_ALIAS = '10'
 
 CLASSES_MODELNET_10 = ['bathtub', 'bed', 'chair', 'desk', 'dresser', 'monitor', 'night_stand', 'sofa', 'table', 'toilet'] # ModelNet10 classes
@@ -84,8 +84,7 @@ print("Precision:", precision)
 print("Recall:", recall)
 print("F1-score:", f1)
 
-print("Confusion Matrix:\n", conf_matrix)
-
+# print("Confusion Matrix:\n", conf_matrix)
 plot_confusion_matrix(conf_matrix, classes=CLASSES_MODELNET_10, figsize=(5,5), text_size=10)
 
 # %%

@@ -5,7 +5,6 @@ import torch.nn.functional as F
 import pytorch_lightning as pl
 from pytorch_memlab import MemReporter
 import socket
-import wandb
 
 from paths import DATA
 from model import PointNet2
@@ -28,7 +27,7 @@ class TrainPointNet2(pl.LightningModule):
                  AUGMENTATIONS                  = T.SamplePoints(1024), # Need this to convert mesh into point cloud
                  LR                             = 0.001,
                  BATCH_SIZE                     = 128,
-                 NUM_EPOCHS                     = 20,
+                 N_EPOCHS                       = 30,
                  N_DATASET                      = 5000,
                  MODELNET_DATASET_ALIAS         = '10', # 'ModelNet10' or 'ModelNet40'
                  STEP_LR_STEP_SIZE              = 20,
@@ -47,7 +46,7 @@ class TrainPointNet2(pl.LightningModule):
         self.augmentations                      = AUGMENTATIONS
         self.lr                                 = LR
         self.bs                                 = BATCH_SIZE
-        self.n_epochs                           = NUM_EPOCHS
+        self.n_epochs                           = N_EPOCHS
         self.n_dataset                          = N_DATASET
         self.modelnet_dataset_alias             = MODELNET_DATASET_ALIAS
 
@@ -107,7 +106,7 @@ class TrainPointNet2(pl.LightningModule):
     def train_dataloader(self):
         train_dataloader = DataLoader(dataset        = self.dataset_train,
                                       batch_size     = self.bs,
-                                      shuffle         = True,
+                                      shuffle        = True,
                                       num_workers    = 8,
                                       pin_memory     = False) # pin_memory=True to keep the data in GPU
         return train_dataloader
@@ -116,18 +115,31 @@ class TrainPointNet2(pl.LightningModule):
     def val_dataloader(self):
         val_dataloader   = DataLoader(dataset        = self.dataset_val,
                                       batch_size     = self.bs,
-                                      shuffle         = False,
+                                      shuffle        = False,
                                       num_workers    = 8,
                                       pin_memory     = False) # pin_memory=True to keep the data in GPU
         return val_dataloader
 
 
+    # def configure_optimizers(self):
+    #     optimizer = torch.optim.Adam(self.parameters(), lr=self.lr)
+    #     scheduler = torch.optim.lr_scheduler.StepLR(optimizer,
+    #                                                 step_size   = self.step_lr_step_size,
+    #                                                 gamma       = self.step_lr_gamma)
+    #     scheduler = {'scheduler': scheduler, 'interval': 'step'}
+    #     return [optimizer], [scheduler]
+
     def configure_optimizers(self):
-        optimizer = torch.optim.Adam(self.parameters(), lr=self.lr)
-        scheduler = torch.optim.lr_scheduler.StepLR(optimizer,
-                                                    step_size   = self.step_lr_step_size,
-                                                    gamma       = self.step_lr_gamma)
+        optimizer = torch.optim.Adam(self.parameters(), lr=1e-5)
+        scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, 
+                                                        epochs              = self.n_epochs, 
+                                                        steps_per_epoch     = len(self.dataset_train)//self.bs, # The number of steps per epoch to train for. This is used along with epochs in order to infer the total number of steps in the cycle if a value for total_steps is not provided. Default: None
+                                                        max_lr              = 0.0015, 
+                                                        pct_start           = 0.3,  # The percentage of the cycle spent increasing the learning rate Default: 0.3
+                                                        div_factor          = 25,   # Determines the initial learning rate via initial_lr = max_lr/div_factor Default: 25
+                                                        final_div_factor    = 1e3)  # Determines the minimum learning rate via min_lr = initial_lr/final_div_factor Default: 1e4
         scheduler = {'scheduler': scheduler, 'interval': 'step'}
+
         return [optimizer], [scheduler]
 
 
@@ -185,8 +197,10 @@ if __name__=='__main__':
                                      verbose    = True,
                                      mode       = 'min')
 
+    N_EPOCHS = 30
+
     trainer = Trainer(
-        max_epochs                      = 30,
+        max_epochs                      = N_EPOCHS,
         accelerator                     = 'gpu',  # set to cpu to address CUDA errors.
         strategy                        = 'auto', # Currently only the pytorch_lightning.strategies.SingleDeviceStrategy and pytorch_lightning.strategies.DDPStrategy training strategies of  PyTorch Lightning are supported in order to correctly share data across all devices/processes
         # devices                         = 'auto',    # [0, 1] or use 'auto'
@@ -196,6 +210,8 @@ if __name__=='__main__':
         logger                          = [logger_tb, logger_wandb],
         callbacks                       = [cb_checkpoint, cb_earlystopping, cb_lr_monitor])
 
-    model = TrainPointNet2()
+    model = TrainPointNet2(
+        N_EPOCHS                        = N_EPOCHS,
+    )
 
     trainer.fit(model)

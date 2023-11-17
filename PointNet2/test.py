@@ -18,10 +18,12 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
 
 # %%
-CKPT_PATH = '/home/brian/github/DL_practice/PointNet2/model_checkpoint/aorus_20231116_114443/'
-CKPT_FILENAME = 'epoch=14-loss=0.03583.ckpt' 
+CKPT_PATH = '/home/brian/github/DL_practice/PointNet2/model_checkpoint/aorus_20231117_091709'
+CKPT_FILENAME = 'val_loss=0.38753-loss=0.14389-epoch=23.ckpt' 
 MODELNET_DATASET_ALIAS = '10'
-CLASSES_MODELNET_10 = ['bathtub', 'bed', 'chair', 'desk', 'dresser', 'monitor', 'night_stand', 'sofa', 'table', 'toilet'] # ModelNet10 classes TODO Check this!
+
+CLASSES_MODELNET_10 = ['bathtub', 'bed', 'chair', 'desk', 'dresser', 'monitor', 'night_stand', 'sofa', 'table', 'toilet'] # ModelNet10 classes
+CLASSES_MODELNET_40 = ['airplane', 'bathtub', 'bed', 'bench', 'bookshelf', 'bottle', 'bowl', 'car', 'chair', 'cone', 'cup', 'curtain', 'desk', 'door', 'dresser', 'flower_pot', 'glass_box', 'guitar', 'keyboard', 'lamp', 'laptop', 'mantel', 'monitor', 'night_stand', 'person', 'piano', 'plant', 'radio', 'range_hood', 'sink', 'sofa', 'stairs', 'stool', 'table', 'tent', 'toilet', 'tv_stand', 'vase', 'wardrobe', 'xbox'] # ModelNet40 classes TODO Check this!
 
 # %%
 trainer = TrainPointNet2.load_from_checkpoint(os.path.join(CKPT_PATH, CKPT_FILENAME), map_location=torch.device('cpu'))
@@ -85,3 +87,5 @@ print("F1-score:", f1)
 print("Confusion Matrix:\n", conf_matrix)
 
 plot_confusion_matrix(conf_matrix, classes=CLASSES_MODELNET_10, figsize=(5,5), text_size=10)
+
+# %%

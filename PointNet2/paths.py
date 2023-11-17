@@ -1,2 +1,2 @@
 # %%
-DATA = '/home/brian/github/DL_practice/data/ModelNet10'
+DATA = '/home/brian/github/DL_practice/data/ModelNet'

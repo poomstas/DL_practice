@@ -11,6 +11,7 @@ from paths import DATA
 from model import PointNet2
 from datetime import datetime
 
+import pytorch_lightning as pl
 from pytorch_lightning import Trainer
 from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.loggers import TensorBoardLogger, WandbLogger
@@ -27,9 +28,8 @@ class TrainPointNet2(pl.LightningModule):
     def __init__(self,  
                  AUGMENTATIONS                  = T.SamplePoints(1024), # Need this to convert mesh into point cloud
                  LR                             = 0.001,
-                 BATCH_SIZE                     = 128,
+                 BATCH_SIZE                     = 128, # 8 if not subsampling, 128 if subsampling
                  N_EPOCHS                       = 30,
-                 N_DATASET                      = 5000,
                  MODELNET_DATASET_ALIAS         = '40', # 'ModelNet10' or 'ModelNet40'
                  SET_ABSTRACTION_RATIO_1        = 0.748,
                  SET_ABSTRACTION_RADIUS_1       = 0.4817,
@@ -46,7 +46,6 @@ class TrainPointNet2(pl.LightningModule):
         self.lr                                 = LR
         self.bs                                 = BATCH_SIZE
         self.n_epochs                           = N_EPOCHS
-        self.n_dataset                          = N_DATASET
         self.modelnet_dataset_alias             = MODELNET_DATASET_ALIAS
 
         self.set_abstraction_ratio_1            = SET_ABSTRACTION_RATIO_1
@@ -74,34 +73,32 @@ class TrainPointNet2(pl.LightningModule):
         print('='*90)
 
 
-    def setup(self, stage:str):
+    def setup(self, stage:str): # setup vs. prepare_data in multi-GPU setting: https://github.com/Lightning-AI/lightning/issues/2515#issuecomment-653943497
         # self.reporter = MemReporter(model) # Set up memory reporter
         # self.reporter.report()
-        return
+        if stage == 'fit' or stage is None:
+            start_time = datetime.now()
+            print('Data Prep Starting time: {}'.format(start_time.strftime('%Y%m%d_%H%M%S')))
+            modelnet_data_path = os.path.join(DATA, 'ModelNet{}'.format(self.modelnet_dataset_alias))
 
+            # ModelNet(root=modelnet_data_path,  train=True, name=self.modelnet_dataset_alias, pre_transform=T.NormalizeScale()) # Specify 10 or 40 (ModelNet10, ModelNet40)
 
-    def prepare_data(self):
-        start_time = datetime.now()
-        print('Starting time: {}'.format(start_time.strftime('%Y%m%d_%H%M%S')))
-        modelnet_data_path = os.path.join(DATA, 'ModelNet{}'.format(self.modelnet_dataset_alias))
-        # ModelNet(root=modelnet_data_path,  train=True, name=self.modelnet_dataset_alias, pre_transform=T.NormalizeScale()) # Specify 10 or 40 (ModelNet10, ModelNet40)
+            self.dataset_train = ModelNet(
+                    root             = modelnet_data_path,
+                    train            = True,
+                    name             = self.modelnet_dataset_alias,
+                    pre_transform    = T.NormalizeScale(),
+                    transform        = self.augmentations)
 
-        self.dataset_train = ModelNet(
-                root             = modelnet_data_path,
-                train            = True,
-                name             = self.modelnet_dataset_alias,
-                pre_transform    = T.NormalizeScale(),
-                transform        = self.augmentations)
+            self.dataset_val   = ModelNet(
+                    root             = modelnet_data_path,
+                    train            = False,
+                    name             = self.modelnet_dataset_alias,
+                    pre_transform    = T.NormalizeScale(),
+                    transform        = self.augmentations)
 
-        self.dataset_val   = ModelNet(
-                root             = modelnet_data_path,
-                train            = False,
-                name             = self.modelnet_dataset_alias,
-                pre_transform    = T.NormalizeScale(),
-                transform        = self.augmentations)
-
-        print('Ending time: {}'.format(datetime.now().strftime('%Y%m%d_%H%M%S')))
-        print('Elapsed time: {}'.format(datetime.now()-start_time))
+            print('Ending time: {}'.format(datetime.now().strftime('%Y%m%d_%H%M%S')))
+            print('Elapsed time: {}'.format(datetime.now()-start_time))
         
         # self.lightning_dataset = LightningDataset(dataset_train, dataset_val) # PyG's support for PyTorch Lightning
         
@@ -204,9 +201,9 @@ if __name__=='__main__':
     trainer = Trainer(
         max_epochs                      = N_EPOCHS,
         accelerator                     = 'gpu',  # set to cpu to address CUDA errors.
-        strategy                        = 'auto', # Currently only the pytorch_lightning.strategies.SingleDeviceStrategy and pytorch_lightning.strategies.DDPStrategy training strategies of  PyTorch Lightning are supported in order to correctly share data across all devices/processes
-        # devices                         = 'auto',    # [0, 1] or use 'auto'
-        devices                         = [0],    # [0, 1] or use 'auto'
+        # Currently only the pytorch_lightning.strategies.SingleDeviceStrategy and pytorch_lightning.strategies.DDPStrategy training strategies of PyTorch Lightning are supported in order to correctly share data across all devices/processes
+        strategy                        = 'ddp', # 'auto' or 'ddp' (other options probably available)
+        devices                         = 'auto',    # [0, 1] or use 'auto'
         log_every_n_steps               = 1,
         fast_dev_run                    = False,     # Run a single-batch through train & val and see if the code works
         logger                          = [logger_tb, logger_wandb],

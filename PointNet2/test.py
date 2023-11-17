@@ -18,17 +18,18 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
 
 # %%
-CKPT_PATH = '/home/brian/github/DL_practice/PointNet2/model_checkpoint/aorus_20231117_173355'
-CKPT_FILENAME = 'val_loss=0.20248-loss=0.04923-epoch=19.ckpt'
-MODELNET_DATASET_ALIAS = '10'
-
-CLASSES_MODELNET_10 = ['bathtub', 'bed', 'chair', 'desk', 'dresser', 'monitor', 'night_stand', 'sofa', 'table', 'toilet'] # ModelNet10 classes
-CLASSES_MODELNET_40 = ['airplane', 'bathtub', 'bed', 'bench', 'bookshelf', 'bottle', 'bowl', 'car', 'chair', 'cone', 'cup', 'curtain', 'desk', 'door', 'dresser', 'flower_pot', 'glass_box', 'guitar', 'keyboard', 'lamp', 'laptop', 'mantel', 'monitor', 'night_stand', 'person', 'piano', 'plant', 'radio', 'range_hood', 'sink', 'sofa', 'stairs', 'stool', 'table', 'tent', 'toilet', 'tv_stand', 'vase', 'wardrobe', 'xbox'] # ModelNet40 classes TODO Check this!
+CKPT_PATH = '/home/brian/github/DL_practice/PointNet2/model_checkpoint/aorus_20231117_205112'
+CKPT_FILENAME = 'val_loss=0.39667-loss=0.10234-epoch=20.ckpt'
+MODELNET_DATASET_ALIAS = '40'
 
 # %%
+CLASSES_MODELNET_10 = ['bathtub', 'bed', 'chair', 'desk', 'dresser', 'monitor', 'night_stand', 'sofa', 'table', 'toilet'] # ModelNet10 classes
+CLASSES_MODELNET_40 = ['airplane', 'bathtub', 'bed', 'bench', 'bookshelf', 'bottle', 'bowl', 'car', 'chair', 'cone', 'cup', 'curtain', 'desk', 'door', 'dresser', 'flower_pot', 'glass_box', 'guitar', 'keyboard', 'lamp', 'laptop', 'mantel', 'monitor', 'night_stand', 'person', 'piano', 'plant', 'radio', 'range_hood', 'sink', 'sofa', 'stairs', 'stool', 'table', 'tent', 'toilet', 'tv_stand', 'vase', 'wardrobe', 'xbox'] # ModelNet40 classes
+
 trainer = TrainPointNet2.load_from_checkpoint(os.path.join(CKPT_PATH, CKPT_FILENAME), map_location=torch.device('cpu'))
 
-dataset_val   = ModelNet(root             = DATA,
+modelnet_data_path = os.path.join(DATA, 'ModelNet{}'.format(MODELNET_DATASET_ALIAS))
+dataset_val   = ModelNet(root             = modelnet_data_path,
                          train            = False,
                          name             = MODELNET_DATASET_ALIAS,
                          pre_transform    = T.NormalizeScale(),
@@ -52,8 +53,9 @@ out = trainer(single_batch)
 pred = torch.argmax(out, dim=1)
 actual = single_batch.y
 
-print('Predicted:\t', CLASSES_MODELNET_10[pred.item()])
-print('Actual:\t\t', CLASSES_MODELNET_10[actual.item()])
+class_names = CLASSES_MODELNET_10 if MODELNET_DATASET_ALIAS == '10' else CLASSES_MODELNET_40
+print('Predicted:\t', class_names[pred.item()])
+print('Actual:\t\t', class_names[actual.item()])
 
 
 # %% Calculate classification metrics
@@ -85,6 +87,7 @@ print("Recall:", recall)
 print("F1-score:", f1)
 
 # print("Confusion Matrix:\n", conf_matrix)
-plot_confusion_matrix(conf_matrix, classes=CLASSES_MODELNET_10, figsize=(5,5), text_size=10)
+figsize = (5, 5) if MODELNET_DATASET_ALIAS == '10' else (15, 15)
+plot_confusion_matrix(conf_matrix, classes=class_names, figsize=figsize, text_size=10)
 
 # %%

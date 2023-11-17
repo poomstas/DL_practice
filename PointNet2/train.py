@@ -13,6 +13,8 @@ from datetime import datetime
 
 from pytorch_lightning import Trainer
 from pytorch_lightning.callbacks import ModelCheckpoint
+from pytorch_lightning.loggers import TensorBoardLogger, WandbLogger
+from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping, LearningRateMonitor
 
 import torch_geometric.transforms as T
 from torch_geometric.loader import DataLoader # https://github.com/Lightning-AI/lightning/issues/1557 -> Using torch geometric's DataLoader should work..
@@ -167,10 +169,21 @@ if __name__=='__main__':
     run_ID = '_'.join([hostname, datetime.now().strftime('%Y%m%d_%H%M%S')])
     print('Hostname: {}'.format(hostname))
 
+    logger_tb = TensorBoardLogger('./tb_logs', name=run_ID)
+    logger_wandb = WandbLogger(project='PointNet2', name=run_ID, mode='online') # online or disabled
+
     cb_checkpoint = ModelCheckpoint(dirpath     = './model_checkpoint/{}/'.format(run_ID),
                                     monitor     = 'val_loss',
                                     filename    = '{val_loss:.5f}-{loss:.5f}-{epoch:02d}',
                                     save_top_k  = 10)
+
+    cb_lr_monitor = LearningRateMonitor(logging_interval='epoch')
+
+    cb_earlystopping = EarlyStopping(monitor    = 'val_loss',
+                                     patience   = 8,
+                                     strict     = True, # whether to crash the training if monitor is not found in the val metrics
+                                     verbose    = True,
+                                     mode       = 'min')
 
     trainer = Trainer(
         max_epochs                      = 30,
@@ -180,8 +193,8 @@ if __name__=='__main__':
         devices                         = [1],    # [0, 1] or use 'auto'
         log_every_n_steps               = 1,
         fast_dev_run                    = False,     # Run a single-batch through train & val and see if the code works
-        logger                          = [],
-        callbacks                       = [cb_checkpoint])
+        logger                          = [logger_tb, logger_wandb],
+        callbacks                       = [cb_checkpoint, cb_earlystopping, cb_lr_monitor])
 
     model = TrainPointNet2()
 

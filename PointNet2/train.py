@@ -1,4 +1,5 @@
 # %%
+import os
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -30,8 +31,6 @@ class TrainPointNet2(pl.LightningModule):
                  N_EPOCHS                       = 30,
                  N_DATASET                      = 5000,
                  MODELNET_DATASET_ALIAS         = '40', # 'ModelNet10' or 'ModelNet40'
-                 STEP_LR_STEP_SIZE              = 20,
-                 STEP_LR_GAMMA                  = 0.5,
                  SET_ABSTRACTION_RATIO_1        = 0.748,
                  SET_ABSTRACTION_RADIUS_1       = 0.4817,
                  SET_ABSTRACTION_RATIO_2        = 0.3316,
@@ -49,9 +48,6 @@ class TrainPointNet2(pl.LightningModule):
         self.n_epochs                           = N_EPOCHS
         self.n_dataset                          = N_DATASET
         self.modelnet_dataset_alias             = MODELNET_DATASET_ALIAS
-
-        self.step_lr_step_size                  = STEP_LR_STEP_SIZE
-        self.step_lr_gamma                      = STEP_LR_GAMMA
 
         self.set_abstraction_ratio_1            = SET_ABSTRACTION_RATIO_1
         self.set_abstraction_radius_1           = SET_ABSTRACTION_RADIUS_1
@@ -85,21 +81,27 @@ class TrainPointNet2(pl.LightningModule):
 
 
     def prepare_data(self):
-        ModelNet(root=DATA,  train=True, name=self.modelnet_dataset_alias, pre_transform=T.NormalizeScale()) # Specify 10 or 40 (ModelNet10, ModelNet40)
+        start_time = datetime.now()
+        print('Starting time: {}'.format(start_time.strftime('%Y%m%d_%H%M%S')))
+        modelnet_data_path = os.path.join(DATA, 'ModelNet{}'.format(self.modelnet_dataset_alias))
+        # ModelNet(root=modelnet_data_path,  train=True, name=self.modelnet_dataset_alias, pre_transform=T.NormalizeScale()) # Specify 10 or 40 (ModelNet10, ModelNet40)
 
         self.dataset_train = ModelNet(
-                root             = DATA,
+                root             = modelnet_data_path,
                 train            = True,
                 name             = self.modelnet_dataset_alias,
                 pre_transform    = T.NormalizeScale(),
                 transform        = self.augmentations)
 
         self.dataset_val   = ModelNet(
-                root             = DATA,
+                root             = modelnet_data_path,
                 train            = False,
                 name             = self.modelnet_dataset_alias,
                 pre_transform    = T.NormalizeScale(),
                 transform        = self.augmentations)
+
+        print('Ending time: {}'.format(datetime.now().strftime('%Y%m%d_%H%M%S')))
+        print('Elapsed time: {}'.format(datetime.now()-start_time))
         
         # self.lightning_dataset = LightningDataset(dataset_train, dataset_val) # PyG's support for PyTorch Lightning
         
@@ -124,8 +126,8 @@ class TrainPointNet2(pl.LightningModule):
     # def configure_optimizers(self):
     #     optimizer = torch.optim.Adam(self.parameters(), lr=self.lr)
     #     scheduler = torch.optim.lr_scheduler.StepLR(optimizer,
-    #                                                 step_size   = self.step_lr_step_size,
-    #                                                 gamma       = self.step_lr_gamma)
+    #                                                 step_size   = self.step_lr_step_size, # 20
+    #                                                 gamma       = self.step_lr_gamma) # 0.5
     #     scheduler = {'scheduler': scheduler, 'interval': 'step'}
     #     return [optimizer], [scheduler]
 

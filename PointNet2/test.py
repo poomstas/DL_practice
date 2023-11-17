@@ -11,8 +11,9 @@ from torch_geometric.loader import DataLoader
 from torch_geometric.datasets import ModelNet
 from torch_geometric.data import Data, Batch
 
-from util import plot_3d_shape, plot_confusion_matrix
 from tqdm import tqdm
+from util import plot_3d_shape, plot_confusion_matrix
+from constants import CLASSES_MODELNET_10, CLASSES_MODELNET_40
 
 import matplotlib.pyplot as plt
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
@@ -23,9 +24,6 @@ CKPT_FILENAME = 'val_loss=0.39667-loss=0.10234-epoch=20.ckpt'
 MODELNET_DATASET_ALIAS = '40'
 
 # %%
-CLASSES_MODELNET_10 = ['bathtub', 'bed', 'chair', 'desk', 'dresser', 'monitor', 'night_stand', 'sofa', 'table', 'toilet'] # ModelNet10 classes
-CLASSES_MODELNET_40 = ['airplane', 'bathtub', 'bed', 'bench', 'bookshelf', 'bottle', 'bowl', 'car', 'chair', 'cone', 'cup', 'curtain', 'desk', 'door', 'dresser', 'flower_pot', 'glass_box', 'guitar', 'keyboard', 'lamp', 'laptop', 'mantel', 'monitor', 'night_stand', 'person', 'piano', 'plant', 'radio', 'range_hood', 'sink', 'sofa', 'stairs', 'stool', 'table', 'tent', 'toilet', 'tv_stand', 'vase', 'wardrobe', 'xbox'] # ModelNet40 classes
-
 trainer = TrainPointNet2.load_from_checkpoint(os.path.join(CKPT_PATH, CKPT_FILENAME), map_location=torch.device('cpu'))
 
 modelnet_data_path = os.path.join(DATA, 'ModelNet{}'.format(MODELNET_DATASET_ALIAS))

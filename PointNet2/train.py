@@ -29,7 +29,7 @@ class TrainPointNet2(pl.LightningModule):
                  BATCH_SIZE                     = 128,
                  N_EPOCHS                       = 30,
                  N_DATASET                      = 5000,
-                 MODELNET_DATASET_ALIAS         = '10', # 'ModelNet10' or 'ModelNet40'
+                 MODELNET_DATASET_ALIAS         = '40', # 'ModelNet10' or 'ModelNet40'
                  STEP_LR_STEP_SIZE              = 20,
                  STEP_LR_GAMMA                  = 0.5,
                  SET_ABSTRACTION_RATIO_1        = 0.748,
@@ -65,7 +65,7 @@ class TrainPointNet2(pl.LightningModule):
                                                 set_abstraction_radius_1  = self.set_abstraction_radius_1,
                                                 set_abstraction_radius_2  = self.set_abstraction_radius_2,
                                                 dropout                   = self.dropout, 
-                                                n_classes                 = 10)
+                                                n_classes                 = 10 if self.modelnet_dataset_alias=='10' else 40)
 
         # self.loss                               = F.nll_loss  # Functional form. The model itself returns log_softmax, so we use NLL Loss instead of nn.CrossEntropyLoss()
         self.loss                               = torch.nn.NLLLoss() # Class form. The model itself returns log_softmax, so we use NLL Loss instead of nn.CrossEntropyLoss()
@@ -204,7 +204,7 @@ if __name__=='__main__':
         accelerator                     = 'gpu',  # set to cpu to address CUDA errors.
         strategy                        = 'auto', # Currently only the pytorch_lightning.strategies.SingleDeviceStrategy and pytorch_lightning.strategies.DDPStrategy training strategies of  PyTorch Lightning are supported in order to correctly share data across all devices/processes
         # devices                         = 'auto',    # [0, 1] or use 'auto'
-        devices                         = [1],    # [0, 1] or use 'auto'
+        devices                         = [0],    # [0, 1] or use 'auto'
         log_every_n_steps               = 1,
         fast_dev_run                    = False,     # Run a single-batch through train & val and see if the code works
         logger                          = [logger_tb, logger_wandb],

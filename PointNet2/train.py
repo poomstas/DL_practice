@@ -129,11 +129,11 @@ class TrainPointNet2(pl.LightningModule):
     #     return [optimizer], [scheduler]
 
     def configure_optimizers(self):
-        optimizer = torch.optim.Adam(self.parameters(), lr=1e-5)
-        scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, 
-                                                        epochs              = self.n_epochs, 
+        optimizer = torch.optim.Adam(self.parameters(), lr=self.lr)
+        scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer,
+                                                        epochs              = self.n_epochs,
                                                         steps_per_epoch     = len(self.dataset_train)//self.bs, # The number of steps per epoch to train for. This is used along with epochs in order to infer the total number of steps in the cycle if a value for total_steps is not provided. Default: None
-                                                        max_lr              = 0.0015, 
+                                                        max_lr              = 0.0015,
                                                         pct_start           = 0.3,  # The percentage of the cycle spent increasing the learning rate Default: 0.3
                                                         div_factor          = 25,   # Determines the initial learning rate via initial_lr = max_lr/div_factor Default: 25
                                                         final_div_factor    = 1e3)  # Determines the minimum learning rate via min_lr = initial_lr/final_div_factor Default: 1e4
@@ -196,13 +196,12 @@ if __name__=='__main__':
                                      verbose    = True,
                                      mode       = 'min')
 
-    N_EPOCHS = 30
+    N_EPOCHS = 100
 
     trainer = Trainer(
         max_epochs                      = N_EPOCHS,
         accelerator                     = 'gpu',  # set to cpu to address CUDA errors.
-        # Currently only the pytorch_lightning.strategies.SingleDeviceStrategy and pytorch_lightning.strategies.DDPStrategy training strategies of PyTorch Lightning are supported in order to correctly share data across all devices/processes
-        strategy                        = 'ddp', # 'auto' or 'ddp' (other options probably available)
+        strategy                        = 'ddp', # 'auto' or 'ddp' (other options probably available) # Currently only the pytorch_lightning.strategies.SingleDeviceStrategy and pytorch_lightning.strategies.DDPStrategy training strategies of PyTorch Lightning are supported in order to correctly share data across all devices/processes
         devices                         = 'auto',    # [0, 1] or use 'auto'
         log_every_n_steps               = 1,
         fast_dev_run                    = False,     # Run a single-batch through train & val and see if the code works

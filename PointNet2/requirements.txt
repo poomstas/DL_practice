@@ -23,6 +23,8 @@ pip install torchsummary==1.5.1
 pip uninstall protobuf
 pip install protobuf==3.20.0
 
+pip install tensorboard
+
 
 
 

@@ -169,7 +169,7 @@ if __name__=='__main__':
 
     cb_checkpoint = ModelCheckpoint(dirpath     = './model_checkpoint/{}/'.format(run_ID),
                                     monitor     = 'val_loss',
-                                    filename    = '{epoch:02d}-{loss:.5f}',
+                                    filename    = '{loss:.5f}-{epoch:02d}',
                                     save_top_k  = 10)
 
     trainer = Trainer(

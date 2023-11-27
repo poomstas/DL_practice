@@ -27,7 +27,7 @@ class TrainPointNet2(pl.LightningModule):
     ''' Train PointNet++ using PyTorch Lightning to classify ModelNet dataset '''
     def __init__(self,  
                  AUGMENTATIONS                  = T.SamplePoints(1024), # Need this to convert mesh into point cloud
-                 BATCH_SIZE                     = 128, # 8 if not subsampling, 128 if subsampling
+                 BATCH_SIZE                     = 256, # 8 if not subsampling, 128 if subsampling
                  N_EPOCHS                       = 30,
                  MODELNET_DATASET_ALIAS         = '40', # 'ModelNet10' or 'ModelNet40'
 
@@ -190,7 +190,7 @@ if __name__=='__main__':
     print('Hostname: {}'.format(hostname))
 
     logger_tb = TensorBoardLogger('./tb_logs', name=run_ID)
-    logger_wandb = WandbLogger(project='PointNet2', name=run_ID, mode='online') # online or disabled
+    logger_wandb = WandbLogger(project='PointNet2_ModelNet40', name=run_ID, mode='online') # online or disabled
 
     cb_checkpoint = ModelCheckpoint(dirpath     = './model_checkpoint/{}/'.format(run_ID),
                                     monitor     = 'val_loss',

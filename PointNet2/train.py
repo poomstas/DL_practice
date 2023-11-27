@@ -27,15 +27,21 @@ class TrainPointNet2(pl.LightningModule):
     ''' Train PointNet++ using PyTorch Lightning to classify ModelNet dataset '''
     def __init__(self,  
                  AUGMENTATIONS                  = T.SamplePoints(1024), # Need this to convert mesh into point cloud
-                 LR                             = 0.001,
                  BATCH_SIZE                     = 128, # 8 if not subsampling, 128 if subsampling
                  N_EPOCHS                       = 30,
                  MODELNET_DATASET_ALIAS         = '40', # 'ModelNet10' or 'ModelNet40'
+
                  SET_ABSTRACTION_RATIO_1        = 0.748,
                  SET_ABSTRACTION_RADIUS_1       = 0.4817,
                  SET_ABSTRACTION_RATIO_2        = 0.3316,
                  SET_ABSTRACTION_RADIUS_2       = 0.2447,
+
                  DROPOUT                        = 0.1,
+
+                 ONECYCLELR_MAX_LR              = 0.0015,
+                 ONECYCLELR_PCT_START           = 0.3,
+                 ONECYCLELR_DIV_FACTOR          = 25,
+                 ONECYCLELR_FINAL_DIV_FACTOR    = 1e3,
                  ):
 
         super(TrainPointNet2, self).__init__()
@@ -43,7 +49,6 @@ class TrainPointNet2(pl.LightningModule):
         self.save_hyperparameters()             # Need this later to load_from_checkpoint without providing the hyperparams again
 
         self.augmentations                      = AUGMENTATIONS
-        self.lr                                 = LR
         self.bs                                 = BATCH_SIZE
         self.n_epochs                           = N_EPOCHS
         self.modelnet_dataset_alias             = MODELNET_DATASET_ALIAS
@@ -54,6 +59,10 @@ class TrainPointNet2(pl.LightningModule):
         self.set_abstraction_radius_2           = SET_ABSTRACTION_RADIUS_2
         self.dropout                            = DROPOUT
 
+        self.onecyclelr_max_lr                  = ONECYCLELR_MAX_LR
+        self.onecyclelr_pct_start               = ONECYCLELR_PCT_START
+        self.onecyclelr_div_factor              = ONECYCLELR_DIV_FACTOR
+        self.onecyclelr_final_div_factor         = ONECYCLELR_FINAL_DIV_FACTOR
 
         self.model                  = PointNet2(set_abstraction_ratio_1   = self.set_abstraction_ratio_1, 
                                                 set_abstraction_ratio_2   = self.set_abstraction_ratio_2,
@@ -129,14 +138,14 @@ class TrainPointNet2(pl.LightningModule):
     #     return [optimizer], [scheduler]
 
     def configure_optimizers(self):
-        optimizer = torch.optim.Adam(self.parameters(), lr=self.lr)
+        optimizer = torch.optim.Adam(self.parameters(), lr=self.onecyclelr_max_lr)
         scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer,
                                                         epochs              = self.n_epochs,
                                                         steps_per_epoch     = len(self.dataset_train)//self.bs, # The number of steps per epoch to train for. This is used along with epochs in order to infer the total number of steps in the cycle if a value for total_steps is not provided. Default: None
-                                                        max_lr              = 0.0015,
-                                                        pct_start           = 0.3,  # The percentage of the cycle spent increasing the learning rate Default: 0.3
-                                                        div_factor          = 25,   # Determines the initial learning rate via initial_lr = max_lr/div_factor Default: 25
-                                                        final_div_factor    = 1e3)  # Determines the minimum learning rate via min_lr = initial_lr/final_div_factor Default: 1e4
+                                                        max_lr              = self.onecyclelr_max_lr,
+                                                        pct_start           = self.onecyclelr_pct_start,  # The percentage of the cycle spent increasing the learning rate Default: 0.3
+                                                        div_factor          = self.onecyclelr_div_factor,   # Determines the initial learning rate via initial_lr = max_lr/div_factor Default: 25
+                                                        final_div_factor     = self.onecyclelr_final_div_factor)  # Determines the minimum learning rate via min_lr = initial_lr/final_div_factor Default: 1e4
         scheduler = {'scheduler': scheduler, 'interval': 'step'}
 
         return [optimizer], [scheduler]

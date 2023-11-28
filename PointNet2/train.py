@@ -28,7 +28,7 @@ class TrainPointNet2(pl.LightningModule):
     def __init__(self,  
                  AUGMENTATIONS                  = T.SamplePoints(1024), # Need this to convert mesh into point cloud
                  BATCH_SIZE                     = 256, # 8 if not subsampling, 128 if subsampling
-                 N_EPOCHS                       = 30,
+                 N_EPOCHS                       = 100,
                  MODELNET_DATASET_ALIAS         = '40', # 'ModelNet10' or 'ModelNet40'
 
                  SET_ABSTRACTION_RATIO_1        = 0.748,
@@ -62,7 +62,7 @@ class TrainPointNet2(pl.LightningModule):
         self.onecyclelr_max_lr                  = ONECYCLELR_MAX_LR
         self.onecyclelr_pct_start               = ONECYCLELR_PCT_START
         self.onecyclelr_div_factor              = ONECYCLELR_DIV_FACTOR
-        self.onecyclelr_final_div_factor         = ONECYCLELR_FINAL_DIV_FACTOR
+        self.onecyclelr_final_div_factor        = ONECYCLELR_FINAL_DIV_FACTOR
 
         self.model                  = PointNet2(set_abstraction_ratio_1   = self.set_abstraction_ratio_1, 
                                                 set_abstraction_ratio_2   = self.set_abstraction_ratio_2,
@@ -205,10 +205,8 @@ if __name__=='__main__':
                                      verbose    = True,
                                      mode       = 'min')
 
-    N_EPOCHS = 100
-
     trainer = Trainer(
-        max_epochs                      = N_EPOCHS,
+        max_epochs                      = 100,
         accelerator                     = 'gpu',  # set to cpu to address CUDA errors.
         strategy                        = 'ddp', # 'auto' or 'ddp' (other options probably available) # Currently only the pytorch_lightning.strategies.SingleDeviceStrategy and pytorch_lightning.strategies.DDPStrategy training strategies of PyTorch Lightning are supported in order to correctly share data across all devices/processes
         devices                         = 'auto',    # [0, 1] or use 'auto'
@@ -217,8 +215,6 @@ if __name__=='__main__':
         logger                          = [logger_tb, logger_wandb],
         callbacks                       = [cb_checkpoint, cb_earlystopping, cb_lr_monitor])
 
-    model = TrainPointNet2(
-        N_EPOCHS                        = N_EPOCHS,
-    )
+    model = TrainPointNet2()
 
     trainer.fit(model)

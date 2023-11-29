@@ -62,7 +62,7 @@ class TrainPointNet2(pl.LightningModule):
         self.onecyclelr_max_lr                  = ONECYCLELR_MAX_LR
         self.onecyclelr_pct_start               = ONECYCLELR_PCT_START
         self.onecyclelr_div_factor              = ONECYCLELR_DIV_FACTOR
-        self.onecyclelr_final_div_factor        = ONECYCLELR_FINAL_DIV_FACTOR
+        self.onecyclelr_final_div_factor         = ONECYCLELR_FINAL_DIV_FACTOR
 
         self.model                  = PointNet2(set_abstraction_ratio_1   = self.set_abstraction_ratio_1, 
                                                 set_abstraction_ratio_2   = self.set_abstraction_ratio_2,
@@ -207,11 +207,11 @@ if __name__=='__main__':
 
     trainer = Trainer(
         max_epochs                      = 100,
-        accelerator                     = 'gpu',  # set to cpu to address CUDA errors.
-        strategy                        = 'ddp', # 'auto' or 'ddp' (other options probably available) # Currently only the pytorch_lightning.strategies.SingleDeviceStrategy and pytorch_lightning.strategies.DDPStrategy training strategies of PyTorch Lightning are supported in order to correctly share data across all devices/processes
-        devices                         = 'auto',    # [0, 1] or use 'auto'
+        accelerator                     = 'gpu',    # set to cpu to address CUDA errors.
+        strategy                        = 'ddp',    # 'auto' or 'ddp' (other options probably available) # Currently only the pytorch_lightning.strategies.SingleDeviceStrategy and pytorch_lightning.strategies.DDPStrategy training strategies of PyTorch Lightning are supported in order to correctly share data across all devices/processes
+        devices                         = 'auto',   # [0, 1] or use 'auto'
         log_every_n_steps               = 1,
-        fast_dev_run                    = False,     # Run a single-batch through train & val and see if the code works
+        fast_dev_run                    = False,    # Run a single-batch through train & val and see if the code works
         logger                          = [logger_tb, logger_wandb],
         callbacks                       = [cb_checkpoint, cb_earlystopping, cb_lr_monitor])
 

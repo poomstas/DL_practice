@@ -190,11 +190,11 @@ if __name__=='__main__':
     print('Hostname: {}'.format(hostname))
 
     logger_tb = TensorBoardLogger('./tb_logs', name=run_ID)
-    logger_wandb = WandbLogger(project='PointNet2_ModelNet40', name=run_ID, mode='online') # online or disabled
+    logger_wandb = WandbLogger(project='PointNet2_ModelNet_40', name=run_ID, mode='online') # online or disabled
 
     cb_checkpoint = ModelCheckpoint(dirpath     = './model_checkpoint/{}/'.format(run_ID),
                                     monitor     = 'val_loss',
-                                    filename    = '{val_loss:.5f}-{loss:.5f}-{epoch:02d}',
+                                    filename     = '{val_loss:.5f}-{loss:.5f}-{epoch:02d}',
                                     save_top_k  = 10)
 
     cb_lr_monitor = LearningRateMonitor(logging_interval='epoch')
